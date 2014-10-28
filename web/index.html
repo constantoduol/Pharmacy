@@ -1,0 +1,63 @@
+
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Pharmacy Login</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <link href="files/bootstrap.min.css" rel="stylesheet">
+        <link href="files/main.css" rel="stylesheet">
+        <script src="files/util.js" type="text/javascript"></script>
+        <script src="files/MessageQueue.js" type="text/javascript"></script>
+        <script type="text/javascript">
+            function doLogin(){
+              var name=getValue("username");   
+              var pass=getValue("password");
+              if(name===""){
+                showInfo("error","username is required");
+                return false;
+              }
+              if(pass===""){
+                showInfo("error","password is required");
+                return false;
+              }
+              var json={
+                  request_header : {
+                     request_msg : "login"
+                  },
+                  
+                  request_object : {
+                     username : name,
+                     password : pass
+                  }
+              }
+              
+              OUT.pushOut(new Data("/pharm/pharm",json), "index_load",
+                  function(json){
+                     if(json.response===false){
+                       showInfo("error","Wrong username or password");  
+                     }
+                  });
+            }
+            
+           function showInfo(area,val){
+              document.getElementById(area).innerHTML=val;
+           }
+        </script>
+    </head>
+    <body>
+        <form class="login-form" onsubmit="doLogin(); return false;">      
+                <h3>Login</h3>
+                <label>Username</label>
+                <input type="text" class="input-block-level" id="username" placeholder="Username" >
+                <label>Password</label>
+                <input type="password" class="input-block-level" id="password" placeholder="Password">
+                <label id="error" style="color : red;"></label>
+                <label id="index_load" style="display: none;"><img src="files/loader.gif"/></label>
+                <footer>
+                    <a href="changePass.html">Change Password</a>
+                    <button type="submit" class="btn btn-primary pull-right">Log in</button>
+                </footer>
+                 <div style="clear: both"></div>
+        </form>
+    </body>
+</html>

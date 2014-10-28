@@ -1,0 +1,1043 @@
+<!--
+To change this template, choose Tools | Templates
+and open the template in the editor.
+-->
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Admin</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <link href="files/bootstrap.min.css" rel="stylesheet">
+        <link href="files/jquery-ui.css" rel="stylesheet">
+        <link href="files/main.css" rel="stylesheet">
+        <script src="files/util.js" type="text/javascript"></script>
+        <script src="files/ui.js" type="text/javascript"></script>
+        <script src="files/MessageQueue.js" type="text/javascript"></script>
+         <script src="files/jquery-1.9.1.js" type="text/javascript"></script>
+         <script src="files/jquery-ui.js" type="text/javascript"></script>
+        <style>
+           .dropdown-menu {
+                position: absolute;
+                display: none;
+                float: left;
+                min-width: 160px;
+                padding:  0px;
+                margin: 0px; 
+                top : inherit;
+                left : inherit;
+           }
+           
+            .reminder {
+              -webkit-border-radius: 4px;
+              -moz-border-radius: 4px;
+              border-radius: 4px; 
+              border : 2px solid #eee;
+              padding : 20px; 
+              margin: 15px;
+              width : 200px;
+              
+           }
+        </style>
+        <script type="text/javascript">
+           var serverUrl="/pharm/pharm";
+           
+           var bussinessName="DOHA CHEMIST";
+              
+    function closeDrugReminder(){
+      dom.el("remind_area").remove();
+    }
+    
+    function closeExpiryReminder(){
+      dom.el("expiry_area").remove();
+    }
+    
+      function fetchExpiryReminder(){
+        var json={
+                 request_header : {
+                     request_msg : "expiry_reminder",
+                     role : "admin"
+                  },
+                  request_object : {  
+                    
+                  }
+              };
+              
+               Ajax.run({
+                  url : serverUrl,
+                  type : "post",
+                  data : json,
+                  error : function(err){
+                     showInfo("sale_info","An error occurred when attempting to fetch expiry reminders");
+                  },
+                  success : function(json){
+                    var resp=json.response.data;
+                    ui.table("expiry_area",["Drug Name","Drug Quantity"],[resp["DRUG_NAME"], resp["DRUG_QTY"]],true);
+                } 
+          });
+    }
+    
+   function fetchDrugReminder(){
+      var json={
+                 request_header : {
+                     request_msg : "drug_reminder",
+                     role : "admin"
+                  },
+                  request_object : {  
+                    
+                  }
+              };
+              
+               Ajax.run({
+                  url : serverUrl,
+                  type : "post",
+                  data : json,
+                  error : function(err){
+                     showInfo("sale_info","An error occurred when attempting to fetch drug reminders");
+                  },
+                  success : function(json){
+                    var resp=json.response.data;
+                    ui.table("remind_area",["Drug Name","Drug Quantity"],[resp["DRUG_NAME"], resp["DRUG_QTY"]],true);
+                } 
+          });
+    }
+   
+           
+           
+           function doLogOut(){
+               var json={
+                  request_header : {
+                     request_msg : "logout",
+                     role : "admin"
+                  },
+                  
+                  request_object : {
+                    
+                  }
+              }
+              OUT.pushOut(new Data("/pharm/pharm",json), "user_load", 
+                  function(json){
+                  
+               });  
+           }
+           function createUser(){
+              var userName=getValue("username");
+              var idNo=getValue("idno");
+              var address=getValue("address");
+              var phoneNo=getValue("phoneno");
+              var role=getValue("role");
+              if(userName==="" || idNo==="" || address==="" || phoneNo==="" || role===""){
+                  showInfo("user_info","All fields are required");
+                  return;
+              }
+              var json={
+                  request_header : {
+                     request_msg : "create_user",
+                       role : "admin"
+                  },
+                  
+                  request_object : {
+                     username : userName,
+                     idno : idNo,
+                     address :address ,
+                     phoneno : phoneNo ,
+                     role : role
+                  }
+              };
+              OUT.pushOut(new Data("/pharm/pharm",json), "user_load", 
+                  function(json){
+                    if(json.response.success==="true"){
+                      showInfo("user_info", "user created successfully, initial password "+json.response.pass);   
+                    }
+                    else{
+                      showInfo("user_info","creating user failed "+json.response.reason);
+                    }
+               });
+           }
+           
+           
+            function editUser(){
+              var userName=getValue("username");
+              var idNo=getValue("idno");
+              var address=getValue("address");
+              var phoneNo=getValue("phoneno");
+              var role=getValue("role");
+              var id=dom.el("search_param").getAttribute("current_id");
+              if(!id){
+                showInfo("user_info","No user selected for editing");  
+                return;
+              }
+              if(userName=="" || idNo=="" || address=="" || phoneNo=="" || role==""){
+                  showInfo("user_info","All fields are required");
+                  return;
+              }
+              var json={
+                  request_header : {
+                     request_msg : "edit_user",
+                     role : "admin"
+                  },
+                  
+                  request_object : {
+                     username : userName,
+                     idno : idNo,
+                     address :address ,
+                     phoneno : phoneNo ,
+                     role : role
+                  }
+              }
+              OUT.pushOut(new Data("/pharm/pharm",json), "user_load", 
+                  function(json){
+                    if(json.response.success==="true"){
+                      showInfo("user_info", "user edited successfully");   
+                    }
+                    else{
+                      showInfo("user_info","creating user failed");
+                    }
+               });
+           }
+           
+           function deleteUser(){
+              var id=dom.el("search_param").getAttribute("current_id");
+              if(!id){
+                showInfo("user_info","No user selected for deleting");  
+                return;
+              }
+               var json={
+                  request_header : {
+                     request_msg : "delete_user",
+                     role : "admin"
+                  },
+                  
+                  request_object : {
+                     id : id
+                  }
+              }
+              OUT.pushOut(new Data("/pharm/pharm",json), "user_load", 
+                  function(json){
+                    if(json.response.success==="true"){
+                      showInfo("user_info", "user deleted successfully");   
+                    }
+                    else{
+                      showInfo("user_info","deleting user failed");
+                    }
+               });
+           }
+           
+           function createDrug(){
+              var name=getValue("drug_name");
+              var qty=getValue("qty");
+              var type=getValue("type");
+              var bpUnitCost=getValue("buy_unit_cost");
+              var spUnitCost=getValue("sell_unit_cost");
+              var expiry=getValue("drug_expiry_limit");
+              var lim=getValue("drug_remind_limit");
+              var narr=getValue("drug_narration");
+              if(name==="" || qty==="" || type==="" || bpUnitCost==="" || spUnitCost==="" || lim==="" || expiry===""){
+                  showInfo("drug_info","All fields are required");
+                  return;
+              }
+              var json={
+                  request_header : {
+                     request_msg : "create_drug",
+                     role : "admin"
+                  },
+                  
+                  request_object : {
+                     drug_name : name,
+                     qty : qty,
+                     type :type ,
+                     bp_unit_cost : bpUnitCost,
+                     sp_unit_cost : spUnitCost,
+                     drug_remind_limit : lim,
+                     drug_expiry_limit : expiry,
+                     drug_narration : narr
+                  }
+              }
+              OUT.pushOut(new Data("/pharm/pharm",json), "drug_load", 
+                  function(json){
+                    if(json.response.success==="true"){
+                      showInfo("drug_info", "drug created successfully");   
+                    }
+                    else{
+                      showInfo("drug_info","creating drug failed "+json.response.reason);
+                    }
+               });
+           }
+           
+           function editDrug(){
+              var name=getValue("drug_name");
+              var type=getValue("type");
+              var bpUnitCost=getValue("buy_unit_cost");
+              var spUnitCost=getValue("sell_unit_cost");
+              var qty=getValue("qty");
+              var lim=getValue("drug_remind_limit");
+              var expiry=getValue("drug_expiry_limit");
+              var narr=getValue("drug_narration");
+              var id=dom.el("search_param_1").getAttribute("current_id");
+              if(!id){
+                showInfo("drug_info","No drug selected for editing");  
+                return;
+              }
+              if(name==="" || type==="" || bpUnitCost==="" || spUnitCost==="" || lim==="" || qty==="" || expiry===""){
+                  showInfo("drug_info","All fields are required");
+                  return;
+              }
+              var json={
+                  request_header : {
+                     request_msg : "edit_drug",
+                     role : "admin"
+                  },
+                  
+                  request_object : {
+                     id : id,
+                     drug_name : name,
+                     type :type ,
+                     bp_unit_cost : bpUnitCost,
+                     sp_unit_cost : spUnitCost,
+                     drug_remind_limit : lim,
+                     qty: qty,
+                     drug_expiry_limit : expiry,
+                     drug_narration : narr
+                  }
+              };
+              OUT.pushOut(new Data("/pharm/pharm",json), "drug_load", 
+                  function(json){
+                    if(json.response.success==="true"){
+                      showInfo("drug_info", "drug updated successfully");   
+                    }
+                    else{
+                      showInfo("drug_info","updating drug failed ");
+                    }
+               });   
+           }
+           
+           function deleteDrug(){
+              var id=dom.el("search_param_1").getAttribute("current_id");
+              if(!id){
+                showInfo("drug_info","No drug selected for deleting");  
+                return;
+              }
+              var conf=confirm("Delete drug? This action cannot be undone");
+              if(!conf){
+                 return;
+              }
+               var json={
+                  request_header : {
+                     request_msg : "delete_drug",
+                     role : "admin"
+                  },
+                  
+                  request_object : {
+                     drug_id : id
+                  }
+              };
+              OUT.pushOut(new Data("/pharm/pharm",json), "drug_load", 
+                  function(json){
+                    if(json.response.success==="true"){
+                      showInfo("drug_info", "drug deleted successfully");   
+                    }
+                    else{
+                      showInfo("drug_info","deleting drug failed");
+                    }
+               });  
+           }
+           
+           
+           
+           function allUsers(){
+             var json={
+                  request_header : {
+                     request_msg : "all_users",
+                     role : "admin"
+                  },
+                  
+                  request_object : {
+                  
+                  }
+              };
+              OUT.pushOut(new Data("/pharm/pharm",json), "user_load", 
+                  function(json){
+                    var name = Math.floor(Math.random()*1000000);
+                    var win=window.open("template.html",name,"width=800,height=650,scrollbars=yes,resizable=yes");
+                    var header=win.document.createElement("h3");
+                    header.setAttribute("align","center");
+                    header.innerHTML=bussinessName;
+                      var func=function(){
+                         var table=win.document.createElement("table");
+                         table.setAttribute("class","table table-condensed");
+                         var th=win.document.createElement("th");
+                         var th1=win.document.createElement("th");
+                         var th2=win.document.createElement("th");
+                         var th3=win.document.createElement("th");
+                        var th4=win.document.createElement("th");
+                        var th5=win.document.createElement("th");
+                        var th6=win.document.createElement("th");
+                        th.innerHTML="User Name";
+                        th1.innerHTML="User ID";
+                        th2.innerHTML="Role";
+                        th3.innerHTML="Address";
+                        th4.innerHTML="ID No.";
+                        th5.innerHTML="Phone No.";
+                        th6.innerHTML="Created";
+                        table.appendChild(th);
+                        table.appendChild(th1);
+                        table.appendChild(th2);
+                        table.appendChild(th3);
+                        table.appendChild(th4);
+                        table.appendChild(th5);
+                        table.appendChild(th6);
+                        for(var x=0; x<json.response.data["USER_NAME"].length; x++){
+                            var tr=win.document.createElement("tr");
+                            var td=win.document.createElement("td"); 
+                            var td1=win.document.createElement("td"); 
+                            var td2=win.document.createElement("td");
+                            var td3=win.document.createElement("td"); 
+                            var td4=win.document.createElement("td"); 
+                            var td5=win.document.createElement("td");
+                            var td6=win.document.createElement("td");
+                            td.innerHTML=json.response.data["USER_NAME"][x];
+                            td1.innerHTML=json.response.data["ID"][x];
+                            td2.innerHTML=json.response.data["ROLE"][x];
+                            td3.innerHTML=json.response.data["ADDRESS"][x];
+                            td4.innerHTML=json.response.data["ID_NO"][x];
+                            td5.innerHTML=json.response.data["PHONE"][x];
+                            td6.innerHTML=json.response.data["CREATED"][x];
+                            tr.appendChild(td);
+                            tr.appendChild(td1);
+                            tr.appendChild(td2);
+                            tr.appendChild(td3);
+                            tr.appendChild(td4);
+                            tr.appendChild(td5);
+                            tr.appendChild(td6);
+                            table.appendChild(tr);
+                        }
+                       win.document.getElementsByTagName("body")[0].appendChild(header);
+                       win.document.getElementsByTagName("body")[0].appendChild(table); 
+                       win.document.title="Users";
+                    };
+                    setTimeout(func,1000);
+           
+             });
+           }
+           
+           function hide(id){
+             document.getElementById(id).innerHTML="";
+           }
+           
+      function allDrugs(){
+                var json={
+                  request_header : {
+                     request_msg : "all_drugs",
+                     role : "admin"
+                  },
+                  
+                  request_object : {
+                  
+                  }
+              }
+              OUT.pushOut(new Data("/pharm/pharm",json), "drug_load", 
+                  function(json){
+                    var name = Math.floor(Math.random()*1000000);
+                    var win=window.open("template.html",name,"width=800,height=650,scrollbars=yes,resizable=yes");
+                    var header=win.document.createElement("h3");
+                    header.setAttribute("align","center");
+                    header.innerHTML=bussinessName;
+                    var func=function(){
+                    var table=dom.newEl("table");
+                    table.setAttribute("class","table table-condensed");
+                    var th=dom.newEl("th");
+                    var th1=dom.newEl("th");
+                    var th2=dom.newEl("th");
+                    var th3=dom.newEl("th");
+                    var th4=dom.newEl("th");
+                    var th5=dom.newEl("th");
+                    var th6=dom.newEl("th");
+                    var th7=dom.newEl("th");
+                    th.innerHTML="Name";
+                    th1.innerHTML="Type";
+                    th2.innerHTML="Buying Price/Unit";
+                    th3.innerHTML="Selling Price/Unit";
+                    th4.innerHTML="Quantity";
+                    th5.innerHTML="Reminder Limit";
+                    th6.innerHTML="Created";
+                    th7.innerHTML="Expiry Date";
+
+                    table.appendChild(th);
+                    table.appendChild(th1);
+                    table.appendChild(th2);
+                    table.appendChild(th3);
+                    table.appendChild(th4);
+                    table.appendChild(th5);
+                    table.appendChild(th6);
+                    table.appendChild(th7);
+                   
+                    for(var x=0; x<json.response.data["DRUG_NAME"].length; x++){
+                       var tr=dom.newEl("tr");
+                       var td=dom.newEl("td"); 
+                       var td1=dom.newEl("td"); 
+                       var td2=dom.newEl("td");
+                       var td3=dom.newEl("td"); 
+                       var td4=dom.newEl("td"); 
+                       var td5=dom.newEl("td");
+                       var td6=dom.newEl("td");
+                       var td7=dom.newEl("td");
+                       
+                       td.innerHTML=json.response.data["DRUG_NAME"][x];
+                       td1.innerHTML=json.response.data["DRUG_TYPE"][x];
+                       td2.innerHTML=json.response.data["BP_UNIT_COST"][x];
+                       td3.innerHTML=json.response.data["SP_UNIT_COST"][x];
+                       td4.innerHTML=json.response.data["DRUG_QTY"][x];
+                       td5.innerHTML=json.response.data["DRUG_REMIND_LIMIT"][x];
+                       td6.innerHTML=new Date(json.response.data["CREATED"][x]).toDateString(); 
+                       td7.innerHTML=new Date(json.response.data["DRUG_EXPIRY_LIMIT"][x]).toDateString(); 
+                       
+                       tr.appendChild(td);
+                       tr.appendChild(td1);
+                       tr.appendChild(td2);
+                       tr.appendChild(td3);
+                       tr.appendChild(td4);
+                       tr.appendChild(td5);
+                       tr.appendChild(td6);
+                       tr.appendChild(td7);
+                       table.appendChild(tr);
+                    }
+                      win.document.getElementsByTagName("body")[0].appendChild(header);
+                      win.document.getElementsByTagName("body")[0].appendChild(table); 
+                      win.document.title="Drugs";
+                   };
+                   setTimeout(func,1000);
+                  
+               });      
+           }
+           
+
+      
+           
+           function showInfo(showArea, value){
+              document.getElementById(showArea).innerHTML=value;
+              var func=function(){
+                document.getElementById(showArea).innerHTML="";   
+              }
+              setTimeout(func,10000);
+           }
+           
+           window.onload=function(){
+              var name=cookieStorage.getItem("user");
+              document.getElementById("log_name").innerHTML="<h4>Welcome "+name+"</h4>";
+              fetchDrugReminder();
+              fetchExpiryReminder();
+           }
+           
+     function autoSuggest(inputId,autoSuggestId,valueName){
+           var input=dom.el(inputId);
+           if(input.value.trim()===""){
+             return;
+           }
+          var type=input.getAttribute("search_type");
+          var json={
+               request_header : {
+                     request_msg : "auto_suggest",
+                     role : "admin"
+                  },
+                  request_object : { 
+                    like : input.value,
+                    type : type
+                  }
+              };
+              
+               Ajax.run({
+                  url : serverUrl,
+                  type : "post",
+                  data : json,
+                  error : function(err){
+                     showInfo("user_info","An error occurred when attempting to fetch data");
+                  },
+                  success : function(json){ 
+                    var resp=json.response.data;
+                    var values=resp[valueName];
+                    var ids=resp["ID"];
+                    dom.el(autoSuggestId).innerHTML="";
+                    for(var x=0; x<values.length; x++){
+                      var li=ui.element({
+                            tag : "li",
+                            parent : autoSuggestId
+                        });
+                      ui.element({
+                       tag : "a",
+                       parent : li,
+                       href : "#link",
+                       onclick : "javascript:completeAutoSuggest(\""+type+"\",\""+values[x]+"\",\""+ids[x]+"\",\""+inputId+"\",\""+autoSuggestId+"\")",
+                       content : values[x]
+                    });
+                    ui.element({
+                       tag : "li",
+                       "class" :"divider",
+                        parent : autoSuggestId
+                    });
+                  }
+                   if(values.length>0){
+                      dom.el(autoSuggestId).style.display="block";
+                  }
+                } 
+          }); 
+  }
+  
+  
+  function completeAutoSuggest(type,value,itemId,inputId,autoSuggestId){
+    dom.el(inputId).value=value;
+    dom.el(inputId).attr("current_id",itemId);
+    dom.el(autoSuggestId).style.display="none";
+    var json={
+                 request_header : {
+                     request_msg : "complete_auto_suggest",
+                     role : "admin"
+                  },
+                  request_object : {  
+                    type : type,
+                    id : itemId
+                  }
+              };
+              
+               Ajax.run({
+                  url : serverUrl,
+                  type : "post",
+                  data : json,
+                  error : function(err){
+                     showInfo("user_info","An error occurred when attempting to fetch field values");
+                  },
+                  success : function(json){
+                    var resp=json.response.data;
+                    if(type==="users"){
+                      finishUserAutoSuggest(resp);  
+                    }
+                    else if(type==="drugs"){
+                        finishDrugAutoSuggest(resp);
+                    }
+                    
+                } 
+          }); 
+  }
+  
+   function finishDrugAutoSuggest(resp){
+      dom.el("drug_name").value=resp["DRUG_NAME"][0];
+      dom.el("qty").value=resp["DRUG_QTY"][0];
+      dom.el("type").value=resp["DRUG_TYPE"][0];
+      dom.el("buy_unit_cost").value=resp["BP_UNIT_COST"][0];
+      dom.el("sell_unit_cost").value=resp["SP_UNIT_COST"][0];
+      dom.el("drug_remind_limit").value=resp["DRUG_REMIND_LIMIT"][0];
+      dom.el("drug_expiry_limit").value=resp["DRUG_EXPIRY_LIMIT"][0];
+   }
+   
+   function finishUserAutoSuggest(resp){
+      dom.el("username").value=resp["USER_NAME"][0];
+      dom.el("idno").value=resp["ID_NO"][0];
+      dom.el("address").value=resp["ADDRESS"][0];
+      dom.el("phoneno").value=resp["PHONE"][0];
+      dom.el("role").value=resp["ROLE"][0];
+   }
+   
+    function openStockHistory(){
+      var begin=dom.el("stock_begin_date");
+      var id=dom.el("search_param_3").getAttribute("current_id");
+      var searchValue=dom.el("search_param_3").value;
+      var end=dom.el("stock_end_date");
+      if(begin.value===""){
+         begin.focus();
+         return;
+      }
+      if(end.value===""){
+         end.focus();
+         return;
+      }
+      if(new Date(end.value)<new Date(begin.value)){
+         showInfo("stock_info","End date cannot be less than begin date");
+         return;
+      }
+      if(searchValue==="" || !id){
+         id="none"; 
+      }
+      var json={
+                 request_header : {
+                     request_msg : "stock_history",
+                     role : "admin",
+                  },
+                  request_object : {  
+                    begin_date : begin.value,
+                    end_date : end.value,
+                    drug_id : id
+                  }
+              };
+              
+               Ajax.run({
+                  url : serverUrl,
+                  type : "post",
+                  data : json,
+                  loadArea : "stock_load",
+                  error : function(err){
+                     showInfo("stock_info","An error occurred when attempting to fetch stock history");
+                  },
+                  success : function(json){
+                    var name = Math.floor(Math.random()*1000000);
+                    var win=window.open("template.html",name,"width=800,height=650,scrollbars=yes,resizable=yes");
+                    var header=win.document.createElement("h3");
+                    header.setAttribute("align","center");
+                    header.innerHTML=bussinessName;
+                    var func=function(){
+                    var table=win.document.createElement("table");
+                    table.setAttribute("class","table table-condensed");
+                    var th=win.document.createElement("th");
+                    var th1=win.document.createElement("th");
+                    var th2=win.document.createElement("th");
+                    var th3=win.document.createElement("th");
+                    var th4=win.document.createElement("th");
+                    var th5=win.document.createElement("th");
+                    var th6=win.document.createElement("th");
+                    var th7=win.document.createElement("th");
+                
+                    th.innerHTML="Stock Name";
+                    th6.innerHTML="Stock Value/BP";
+                    th1.innerHTML="Stock Value/SP";
+                    th2.innerHTML="Stock Quantity";
+                    th5.innerHTML="Profit";
+                    th3.innerHTML="Entry Type";
+                    th7.innerHTML="Narration";
+                    th4.innerHTML="Entry Date";
+               
+                    table.appendChild(th);
+                     table.appendChild(th6);
+                    table.appendChild(th1);
+                    table.appendChild(th2);
+                    table.appendChild(th5);
+                    table.appendChild(th3);
+                    table.appendChild(th7);
+                    table.appendChild(th4);
+                    var totalStock=0;
+                    var totalCostBp=0;
+                    var totalCostSp=0;
+                    var totalProfit=0;
+                    var costOfSales=0;
+                    var costOfGoods=0;
+                    for(var x=0; x<json.response.data["DRUG_NAME"].length; x++){
+                       var tr=win.document.createElement("tr");
+                       var td=win.document.createElement("td"); 
+                       var td1=win.document.createElement("td"); 
+                       var td2=win.document.createElement("td");
+                       var td3=win.document.createElement("td"); 
+                       var td4=win.document.createElement("td");
+                       var td5=win.document.createElement("td"); 
+                       var td6=win.document.createElement("td");
+                       var td7=win.document.createElement("td");
+                       
+                       td.innerHTML=json.response.data["DRUG_NAME"][x];
+                       td7.innerHTML=json.response.data["NARRATION"][x];
+                       var costBp=json.response.data["STOCK_COST_BP"][x];
+                       var costSp=json.response.data["STOCK_COST_SP"][x];
+                       var qty=json.response.data["STOCK_QTY"][x];
+                       var profit=json.response.data["PROFIT"][x];
+                       if(json.response.data["TRAN_TYPE"][x]==="1"){
+                         td3.innerHTML="<font color='green'>Stock Increase</font>";   
+                         totalStock=totalStock+parseInt(qty);
+                         totalCostBp=totalCostBp+parseFloat(costBp);
+                         totalCostSp=totalCostSp+parseFloat(costSp);
+                         totalProfit=totalProfit-parseFloat(profit);
+                         td2.innerHTML=qty;
+                         td6.innerHTML=formatMoney(costBp);
+                         td5.innerHTML= formatMoney(profit);
+                         td1.innerHTML = formatMoney(costSp);
+                       }
+                       else{
+                          td3.innerHTML="<font color='red'>Stock Reduction</font>";  
+                          td2.innerHTML="-"+qty;
+                          td1.innerHTML="-"+formatMoney(costSp);
+                          td6.innerHTML="-"+formatMoney(costBp);
+                          totalStock=totalStock-parseInt(qty);
+                          totalCostBp=totalCostBp-parseFloat(costBp);
+                          totalCostSp=totalCostSp-parseFloat(costSp);
+                          totalProfit=totalProfit+parseFloat(profit);
+                          costOfSales=costOfSales+parseFloat(costSp);
+                          costOfGoods=costOfGoods+parseFloat(costBp);
+                          td5.innerHTML=formatMoney(profit);
+                       }
+                       var created=new Date(json.response.data["CREATED"][x]);
+                       td4.innerHTML=created.toDateString()+" "+created.toLocaleTimeString();
+                       tr.appendChild(td);
+                       tr.appendChild(td6);
+                       tr.appendChild(td1);
+                       tr.appendChild(td2);
+                       tr.appendChild(td5);
+                       tr.appendChild(td3);
+                       tr.appendChild(td7);
+                       tr.appendChild(td4);
+                       table.appendChild(tr);
+                    }
+                    
+                     var tr=win.document.createElement("tr");
+                     var td1=win.document.createElement("td");
+                     var td2=win.document.createElement("td");
+                     var td3=win.document.createElement("td");
+                     var td4=win.document.createElement("td");
+                     var td5=win.document.createElement("td");
+                     td1.innerHTML="<b>Totals</b>";
+                     td2.innerHTML=formatMoney(totalCostBp);
+                     td5.innerHTML=formatMoney(totalCostSp);
+                     td3.innerHTML=totalStock;
+                     td4.innerHTML=formatMoney(totalProfit);
+                     tr.appendChild(td1);
+                     tr.appendChild(td2);
+                     tr.appendChild(td5);
+                     tr.appendChild(td3);
+                     tr.appendChild(td4);
+                     table.appendChild(tr);
+                     var tr1=win.document.createElement("tr");
+                     var td6=win.document.createElement("td");
+                     td6.innerHTML="<br/><b style='font-size : 16px'>Cost Of Sales: "+formatMoney(costOfSales)+"<br/>Cost Of Goods: "+formatMoney(costOfGoods)+"<br/>"+"Profit: "+formatMoney(totalProfit)+"<b>";
+                     tr1.appendChild(td6);
+                     table.appendChild(tr1);
+                      win.document.getElementsByTagName("body")[0].appendChild(header);
+                     win.document.getElementsByTagName("body")[0].appendChild(table); 
+                     win.document.title="Stock History";
+                   };
+                   setTimeout(func,1000);
+                } 
+          });    
+    }
+    
+    
+        function formatMoney(num) {
+            num=parseFloat(num);
+            var p = num.toFixed(2).split(".");
+            var chars = p[0].split("").reverse();
+            var newstr = '';
+            var count = 0;
+            for (x in chars) {
+                count++;
+                if(count%3 == 1 && count != 1) {
+                    newstr = chars[x] + ',' + newstr;
+                } else {
+                    newstr = chars[x] + newstr;
+                }
+            }
+            return newstr + "." + p[1];
+        }
+   
+      $(function() {
+            $("#stock_begin_date").datepicker({ 
+                dateFormat: "yy-mm-dd",
+                showButtonPanel: true,
+                changeMonth: true,
+                changeYear: true
+             });
+             
+             $("#stock_end_date").datepicker({ 
+                dateFormat: "yy-mm-dd",
+                showButtonPanel: true,
+                changeMonth: true,
+                changeYear: true
+             });
+             
+             $("#profit_begin_date").datepicker({ 
+                dateFormat: "yy-mm-dd",
+                showButtonPanel: true,
+                changeMonth: true,
+                changeYear: true
+             });
+             
+             $("#profit_end_date").datepicker({ 
+                dateFormat: "yy-mm-dd",
+                showButtonPanel: true,
+                changeMonth: true,
+                changeYear: true
+             });
+             
+              $("#tran_begin_date").datepicker({ 
+                dateFormat: "yy-mm-dd",
+                showButtonPanel: true,
+                changeMonth: true,
+                changeYear: true
+             });
+             
+               $("#tran_end_date").datepicker({ 
+                dateFormat: "yy-mm-dd",
+                showButtonPanel: true,
+                changeMonth: true,
+                changeYear: true
+             });
+             
+              $("#drug_expiry_limit").datepicker({ 
+                dateFormat: "yy-mm-dd",
+                showButtonPanel: true,
+                changeMonth: true,
+                changeYear: true
+             });
+         });
+        </script>
+    </head>
+    <body>
+      <div class="container">
+          <table width="940" class="sub-container">
+              <tr>
+                  <td>
+                     <label id="log_name" style="padding-left: 10px"></label>
+                  </td>
+                  <td align="right">
+                    <a href="javascript:doLogOut()" style="padding-right: 20px">Log Out</a>
+                </td>
+               </tr>
+          </table>
+             <div id="remind_area" class="sub-container">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true" onclick="closeDrugReminder()">&times;</button>
+                <h3>Stock Running Low</h3>
+             </div>
+             <div id="expiry_area" class="sub-container">
+                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true" onclick="closeExpiryReminder()">&times;</button>
+                 <h3>Stock Expiry</h3>
+            </div>
+          <div class="sub-container">
+              <h3>Users</h3>
+              <ul style="margin-left: 0px">
+                  <li style="list-style-type : none" class="dropdown" id="auto_suggest_container">
+                    <input type="text" id="search_param" data-toggle="dropdown" placeholder="Search Users" class="dropdown-toggle input-xxlarge" search_type="users" onkeyup="javascript:autoSuggest('search_param','auto_suggest','USER_NAME')">  
+                  </li>
+                  <li class="dropdown-menu" id="auto_suggest" style="display : none">
+                      
+                  </li>
+              </ul>
+              <hr>
+              <div id="sale_area">
+                  
+              </div>
+              <label id="user_load" style="display: none;"><img src="files/loader.gif"/></label>
+              <label id="user_info" style="color : red"></label>
+              <label>Username</label>
+              <input type="text" placeholder="username" id="username" class="input-xxlarge"/>
+               <label>ID No.</label>
+              <input type="text" placeholder="id no" id="idno" class="input-xxlarge"/>
+                <label>Address</label>
+              <input type="text" placeholder="address" id="address" class="input-xxlarge"/>
+                <label>Phone No.</label>
+              <input type="text" placeholder="Phone No." id="phoneno"  class="input-xxlarge"/>
+                <label>Role</label>
+                <select id="role" class="input-xxlarge">
+                     <option value="pharmacist">Pharmacist</option>
+                     <option value="admin">Admin</option>
+                </select>
+                <div style="clear: both"></div>
+                <footer>
+                    <button type="button" class="btn btn-primary" onclick="createUser()">Create User</button>
+                    <button type="button" class="btn btn-primary" onclick="editUser()">Edit User</button>
+                     <button type="button" class="btn btn-primary" onclick="deleteUser()">Delete User</button>
+                     <button type="button" class="btn btn-primary" onclick="allUsers()">All Users</button>
+                </footer>
+                <br/>
+                <div id="user_data">
+                    
+                </div>
+          </div>
+          
+          <div class="sub-container">
+              <h3>Drugs</h3>
+                <ul style="margin-left: 0px">
+                  <li style="list-style-type : none" class="dropdown" id="auto_suggest_container_1">
+                    <input type="text" id="search_param_1" data-toggle="dropdown" placeholder="Search Drugs" class="dropdown-toggle input-xxlarge" search_type="drugs" onkeyup="javascript:autoSuggest('search_param_1','auto_suggest_1','DRUG_NAME')">  
+                  </li>
+                  <li class="dropdown-menu" id="auto_suggest_1" style="display : none">
+                      
+                  </li>
+              </ul>
+              <hr>
+               <label>Drug name</label>
+               <input type="text" placeholder="drug name" id="drug_name" class="input-xxlarge"/>
+               <label>Quantity</label>
+               <input type="text" placeholder="quantity" id="qty"  class="input-xxlarge"/>
+               <label>Drug Type</label>
+               <input type="text" placeholder="Drug type" id="type" class="input-xxlarge"/>
+               <label>Buying Unit Cost</label>
+               <input type="text" placeholder="buying unit cost" id="buy_unit_cost"  class="input-xxlarge"/>
+                <label>Selling Unit Cost</label>
+               <input type="text" placeholder="selling unit cost" id="sell_unit_cost"  class="input-xxlarge"/>
+               <label>Drug Reminder Limit</label>
+               <input type="text" placeholder="Drug reminder limit" id="drug_remind_limit"  class="input-xxlarge"/>
+               <label>Drug Expiry Limit</label>
+               <input type="text" placeholder="Drug Expiry limit" id="drug_expiry_limit" style="cursor : pointer" readonly="readonly" class="input-xxlarge"/>
+               <label>Drug Narration</label>
+               <input type="text" placeholder="Drug Narration" id="drug_narration"  class="input-xxlarge"/> 
+               <label id="drug_load" style="display: none;"><img src="files/loader.gif"/></label>
+              <label id="drug_info" style="color : red"></label>
+               <div style="clear: both"></div>
+                <footer>
+                    <button type="button" class="btn btn-primary" onclick="createDrug()">Create Drug</button>
+                    <button type="button" class="btn btn-primary" onclick="editDrug()">Update Drug</button>
+                    <button type="button" class="btn btn-primary" onclick="deleteDrug()">Delete Drug</button>
+                     <button type="button" class="btn btn-primary" onclick="allDrugs()">All Drugs</button>
+                </footer>   
+          </div>
+          
+          
+           <div class="sub-container">
+              <h3>Stock History</h3>
+               <ul style="margin-left: 0px">
+                  <li style="list-style-type : none" class="dropdown" id="auto_suggest_container_2">
+                    <input type="text" id="search_param_3" data-toggle="dropdown" placeholder="Search Drugs" class="dropdown-toggle input-xxlarge" search_type="drugs" onkeyup="javascript:autoSuggest('search_param_3','auto_suggest_3','DRUG_NAME')">  
+                  </li>
+                  <li class="dropdown-menu" id="auto_suggest_3" style="display : none">
+                      
+                  </li>
+              </ul>
+              <hr>
+              <label id="stock_load" style="display: none;"><img src="files/loader.gif"/></label>
+              <label id="stock_info" style="color : red"></label>
+              <input type="text" id="stock_begin_date" placeholder="Begin Date" readonly="readonly" style="cursor : pointer" class="input-medium"/>
+              <input type="text" id="stock_end_date" placeholder="End Date" readonly="readonly" style="cursor : pointer" class="input-medium"/>
+              <br/>
+              <input type="button" onclick="openStockHistory()" value="Stock History" class="btn btn-primary"/>
+          </div>
+          
+           <div class="sub-container">
+              <h3>Expenses and Revenues</h3>
+                <ul style="margin-left: 0px">
+                  <li style="list-style-type : none" class="dropdown" id="auto_suggest_container_3">
+                    <input type="text" id="search_param_4" data-toggle="dropdown" placeholder="Search Expenses/Revenues" class="dropdown-toggle input-xxlarge" search_type="expenses" onkeyup="javascript:autoSuggest('search_param_4','auto_suggest_4','EXPENSE_NAME')">  
+                  </li>
+                  <li class="dropdown-menu" id="auto_suggest_4" style="display : none">
+                      
+                  </li>
+              </ul>
+              <hr>
+               <label>Name</label>
+               <input type="text" placeholder="expense/revenue name" id="expense_name" class="input-xxlarge"/>
+               <label>Amount</label>
+               <input type="text" placeholder="expense/revenue amount" id="expense_amount"  class="input-xxlarge"/>
+               <label>Type</label>
+               <select id="expense_type">
+                   <option value="expense">Expense</option>
+                   <option value="revenue">Revenue</option>
+               </select>
+               <label id="expense_load" style="display: none;"><img src="files/loader.gif"/></label>
+               <label id="expense_info" style="color : red"></label>
+               <div style="clear: both"></div>
+                <footer>
+                    <button type="button" class="btn btn-primary" onclick="createDrug()">Create</button>
+                    <button type="button" class="btn btn-primary" onclick="deleteDrug()">Delete</button>
+                </footer>   
+          </div>
+     
+          
+            <div class="sub-container">
+              <h3>Profit and Loss</h3>
+              <label id="profit_load" style="display: none;"><img src="files/loader.gif"/></label>
+              <label id="profit_info" style="color : red"></label>
+              <input type="text" placeholder="Amount" id="profit_amount"  class="input-xxlarge"/>
+              <input type="text" placeholder="Narration" id="profit_narration"  class="input-xxlarge"/>
+              <br>
+              <input type="button" onclick="openStockHistory()" value="Add Expense" class="btn btn-primary"/>
+              <input type="button" onclick="openStockHistory()" value="Add Revenue" class="btn btn-primary"/>
+              <hr>
+              <input type="text" id="profit_begin_date" placeholder="Begin Date" readonly="readonly" style="cursor : pointer" class="input-medium"/>
+              <input type="text" id="profit_end_date" placeholder="End Date" readonly="readonly" style="cursor : pointer" class="input-medium"/>
+              <br>
+              <input type="button" onclick="openStockHistory()" value="Profit and Loss" class="btn btn-primary"/>
+          </div>
+          
+      </div>
+        
+    </body>
+</html>

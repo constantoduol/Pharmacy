@@ -1,0 +1,93 @@
+
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Hospital Login</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <link href="files/bootstrap.min.css" rel="stylesheet">
+        <link href="files/main.css" rel="stylesheet">
+        <script src="files/util.js" type="text/javascript"></script>
+        <script src="files/MessageQueue.js" type="text/javascript"></script>
+        <script type="text/javascript">
+          function changePass(){
+              var name=getValue("username");
+              var oldpass=document.getElementById("old_password").value;
+              var newpass=document.getElementById("new_password").value;
+              var confirmpass=document.getElementById("confirm_new_password").value;
+              if(name===""){
+                showInfo("Name is required"); 
+                focus("username");
+                return;
+              }
+              if(oldpass===""){
+                 showInfo("Old password is required"); 
+                 focus("old_password");
+                 return;
+              }
+              if(newpass===""){
+                  showInfo("New password is required"); 
+                  focus("new_password");
+                  return;
+              }
+              if(confirmpass===""){
+                  showInfo("Confirm new password is required");  
+                  focus("confirm_new_password");
+                return;
+              }
+              if(confirmpass!==newpass){
+                    showInfo("Passwords do not match");
+                    return;
+                 }
+                 
+               var json={
+                  request_header : {
+                     request_msg : "change_pass"
+                  },
+                  
+                  request_object : {
+                     username : name,
+                     old_password : oldpass,
+                     new_password : newpass
+                  }
+              }
+              
+              OUT.pushOut(new Data("/pharm/pharm",json), "change_load",
+                  function(json){
+                     if(json.response===false){
+                       showInfo("Wrong username or password");  
+                     }
+                     else{
+                       window.location="index.html";
+                     }
+                  });
+              
+
+        }
+        
+           function showInfo(val){
+              document.getElementById("error").innerHTML=val;
+           }
+        </script>
+    </head>
+    <body>
+        <form class="login-form" onsubmit="changePass(); return false;">      
+                 <h3>Change Password</h3>
+                <label>Username</label>
+                <input type="text" class="input-block-level" id="username" placeholder="Username" >
+                <label>Old Password</label>
+                <input type="password" class="input-block-level" id="old_password" placeholder="Old Password">
+                 <label>New Password</label>
+                <input type="password" class="input-block-level" id="new_password" placeholder="New Password">
+                 <label>Confirm New Password</label>
+                <input type="password" class="input-block-level" id="confirm_new_password" placeholder="Confirm New Password">
+                <label id="error" style="color : red;"></label>
+                <label id="change_load" style="display: none;"><img src="files/loader.gif"/></label>
+                <footer>
+                    <button type="submit" class="btn btn-medium btn-primary pull-right" >Change Password</button>
+                </footer>
+                 <div style="clear: both"></div>
+        </form>
+            
+        
+    </body>
+</html>

@@ -1,0 +1,731 @@
+<!--
+To change this template, choose Tools | Templates
+and open the template in the editor.
+-->
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Sales</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <link href="files/bootstrap.min.css" rel="stylesheet">
+        <link href="files/jquery-ui.css" rel="stylesheet">
+        <link href="files/main.css" rel="stylesheet">
+        <script src="files/util.js" type="text/javascript"></script>
+        <script src="files/ui.js" type="text/javascript"></script>
+        <script src="files/MessageQueue.js" type="text/javascript"></script>
+         <script src="files/jquery-1.9.1.js" type="text/javascript"></script>
+         <script src="files/jquery-ui.js" type="text/javascript"></script>
+        <style>
+           .dropdown-menu {
+                position: absolute;
+                display: none;
+                float: left;
+                min-width: 160px;
+                padding:  0px;
+                margin: 0px; 
+                top : inherit;
+                left : inherit;
+           }
+           
+           .reminder {
+              -webkit-border-radius: 4px;
+              -moz-border-radius: 4px;
+              border-radius: 4px; 
+              border : 2px solid #eee;
+              padding : 20px; 
+              margin: 15px;
+              width : 200px;
+           }
+        </style>
+        <script type="text/javascript">
+           var serverUrl="/pharm/pharm";
+           var previousQty;
+           var previousDrugIds;
+           var bussinessName="DOHA CHEMIST";
+           function doLogOut(){
+               var json={
+                  request_header : {
+                     request_msg : "logout",
+                     role : "pharmacist"
+                  },
+                  
+                  request_object : {
+                    
+                  }
+              }
+              OUT.pushOut(new Data("/pharm/pharm",json), "sale_load", 
+                  function(json){
+                  
+               });  
+           }
+           
+           
+           function closeExpiryReminder(){
+            dom.el("expiry_area").remove();
+          }
+    
+      function fetchExpiryReminder(){
+        var json={
+                 request_header : {
+                     request_msg : "expiry_reminder",
+                     role : "pharmacist"
+                  },
+                  request_object : {  
+                    
+                  }
+              };
+              
+               Ajax.run({
+                  url : serverUrl,
+                  type : "post",
+                  data : json,
+                  error : function(err){
+                     showInfo("sale_info","An error occurred when attempting to fetch expiry reminders");
+                  },
+                  success : function(json){
+                    var resp=json.response.data;
+                    ui.table("expiry_area",["Drug Name","Drug Quantity"],[resp["DRUG_NAME"], resp["DRUG_QTY"]],true);
+                } 
+          });
+    }
+           
+              function allDrugs(){
+                var json={
+                  request_header : {
+                     request_msg : "all_drugs",
+                     role : "pharmacist"
+                  },
+                  
+                  request_object : {
+                  
+                  }
+              }
+              OUT.pushOut(new Data("/pharm/pharm",json), "sale_load", 
+                  function(json){
+                    var name = Math.floor(Math.random()*1000000);
+                    var win=window.open("template.html",name,"width=800,height=650,scrollbars=yes,resizable=yes");
+                    var header=win.document.createElement("h3");
+                    header.setAttribute("align","center");
+                    header.innerHTML=bussinessName;
+                    var func=function(){
+                    var table=dom.newEl("table");
+                    table.setAttribute("class","table table-condensed");
+                    var th=dom.newEl("th");
+                    var th1=dom.newEl("th");
+                    var th2=dom.newEl("th");
+                    var th3=dom.newEl("th");
+                    var th4=dom.newEl("th");
+                    var th5=dom.newEl("th");
+                    var th6=dom.newEl("th");
+                    var th7=dom.newEl("th");
+                    th.innerHTML="Name";
+                    th1.innerHTML="Type";
+                    th2.innerHTML="Buying Price/Unit";
+                    th3.innerHTML="Selling Price/Unit";
+                    th4.innerHTML="Quantity";
+                    th5.innerHTML="Reminder Limit";
+                    th6.innerHTML="Created";
+                    th7.innerHTML="Expiry Date";
+
+                    table.appendChild(th);
+                    table.appendChild(th1);
+                    table.appendChild(th2);
+                    table.appendChild(th3);
+                    table.appendChild(th4);
+                    table.appendChild(th5);
+                    table.appendChild(th6);
+                    table.appendChild(th7);
+                   
+                    for(var x=0; x<json.response.data["DRUG_NAME"].length; x++){
+                       var tr=dom.newEl("tr");
+                       var td=dom.newEl("td"); 
+                       var td1=dom.newEl("td"); 
+                       var td2=dom.newEl("td");
+                       var td3=dom.newEl("td"); 
+                       var td4=dom.newEl("td"); 
+                       var td5=dom.newEl("td");
+                       var td6=dom.newEl("td");
+                       var td7=dom.newEl("td");
+                       
+                       td.innerHTML=json.response.data["DRUG_NAME"][x];
+                       td1.innerHTML=json.response.data["DRUG_TYPE"][x];
+                       td2.innerHTML=json.response.data["BP_UNIT_COST"][x];
+                       td3.innerHTML=json.response.data["SP_UNIT_COST"][x];
+                       td4.innerHTML=json.response.data["DRUG_QTY"][x];
+                       td5.innerHTML=json.response.data["DRUG_REMIND_LIMIT"][x];
+                       td6.innerHTML=new Date(json.response.data["CREATED"][x]).toDateString(); 
+                       td7.innerHTML=new Date(json.response.data["DRUG_EXPIRY_LIMIT"][x]).toDateString(); 
+                       
+                       tr.appendChild(td);
+                       tr.appendChild(td1);
+                       tr.appendChild(td2);
+                       tr.appendChild(td3);
+                       tr.appendChild(td4);
+                       tr.appendChild(td5);
+                       tr.appendChild(td6);
+                       tr.appendChild(td7);
+                       table.appendChild(tr);
+                    }
+                      win.document.getElementsByTagName("body")[0].appendChild(header);
+                      win.document.getElementsByTagName("body")[0].appendChild(table); 
+                      win.document.title="Drugs";
+                   };
+                   setTimeout(func,1000);
+               });      
+           }
+           
+
+      
+           
+           function showInfo(showArea, value){
+              document.getElementById(showArea).innerHTML=value;
+              var func=function(){
+                document.getElementById(showArea).innerHTML="";   
+              };
+              setTimeout(func,3000);
+           }
+           
+           window.onload=function(){
+              var name=cookieStorage.getItem("user");
+              document.getElementById("log_name").innerHTML="<h4>Welcome "+name+"</h4>";
+              fetchDrugReminder();
+              fetchExpiryReminder();
+           }
+           
+     function autoSuggest(inputId,autoSuggestId,valueName){
+           var input=dom.el(inputId);
+           if(input.value.trim()===""){
+             return;
+           }
+          var type=input.getAttribute("search_type");
+          var json={
+               request_header : {
+                     request_msg : "auto_suggest",
+                     role : "pharmacist"
+                  },
+                  request_object : { 
+                    like : input.value,
+                    type : type
+                  }
+              };
+              
+               Ajax.run({
+                  url : serverUrl,
+                  type : "post",
+                  data : json,
+                  error : function(err){
+                     showInfo("user_info","An error occurred when attempting to fetch data");
+                  },
+                  success : function(json){ 
+                    var resp=json.response.data;
+                    var values=resp[valueName];
+                    var ids=resp["ID"];
+                    dom.el(autoSuggestId).innerHTML="";
+                    for(var x=0; x<values.length; x++){
+                      var li=ui.element({
+                            tag : "li",
+                            parent : autoSuggestId
+                        });
+                      ui.element({
+                       tag : "a",
+                       parent : li,
+                       href : "#link",
+                       onclick : "javascript:completeAutoSuggest(\""+type+"\",\""+values[x]+"\",\""+ids[x]+"\",\""+inputId+"\",\""+autoSuggestId+"\")",
+                       content : values[x]
+                    });
+                    ui.element({
+                       tag : "li",
+                       "class" :"divider",
+                        parent : autoSuggestId
+                    });
+                  }
+                   if(values.length>0){
+                      dom.el(autoSuggestId).style.display="block";
+                  }
+                } 
+          }); 
+  }
+  
+  
+  function completeAutoSuggest(type,value,itemId,inputId,autoSuggestId){
+    dom.el(inputId).value=value;
+    dom.el(inputId).attr("current_id",itemId);
+    dom.el(autoSuggestId).style.display="none";
+    var json={
+                 request_header : {
+                     request_msg : "complete_auto_suggest",
+                     role : "pharmacist"
+                  },
+                  request_object : {  
+                    type : type,
+                    id : itemId
+                  }
+              };
+              
+               Ajax.run({
+                  url : serverUrl,
+                  type : "post",
+                  data : json,
+                  error : function(err){
+                     showInfo("user_info","An error occurred when attempting to fetch field values");
+                  },
+                  success : function(json){
+                    var resp=json.response.data;
+                    dom.el("search_param").value="";
+                    dom.el("search_param").focus();
+                    if(type==="drugs"){
+                        finishDrugAutoSuggest(resp);
+                    }
+                    
+                } 
+          }); 
+  }
+  
+   function finishDrugAutoSuggest(resp){
+      var table;
+      if(!dom.el("sale_area_table")){
+          table=dom.newEl("table");
+          table.attr("id","sale_area_table")
+          table.attr("class","table table-condensed");
+          var tr0=dom.newEl("tr");
+          var th=dom.newEl("th");
+          var th1=dom.newEl("th");
+          var th2=dom.newEl("th");
+          var th3=dom.newEl("th");
+          var th4=dom.newEl("th");
+          var th5=dom.newEl("th");
+          var th6=dom.newEl("th");
+          th.innerHTML="Name";
+          th1.innerHTML="Type";
+          th2.innerHTML="Buying Price/Unit";
+          th3.innerHTML="Selling Price/Unit";
+          th4.innerHTML="Available Stock";
+          th6.innerHTML="Expiry Date";
+          th5.innerHTML="Sale Quantity";
+          
+          tr0.add(th);
+          tr0.add(th1);
+          tr0.add(th2);
+          tr0.add(th3);
+          tr0.add(th4);
+          tr0.add(th6);
+          tr0.add(th5); 
+          table.add(tr0);
+      }
+      else{
+       table=dom.el("sale_area_table");   
+      }
+ 
+      var tr=dom.newEl("tr");
+      var td1=dom.newEl("td");
+      td1.innerHTML=resp["DRUG_NAME"][0];
+      var td2=dom.newEl("td");
+      td2.innerHTML=resp["DRUG_TYPE"][0];
+      var td3=dom.newEl("td");
+      td3.innerHTML=resp["BP_UNIT_COST"][0];
+      var td4=dom.newEl("td");
+      td4.innerHTML=resp["SP_UNIT_COST"][0];
+      var td5=dom.newEl("td");
+      td5.innerHTML=resp["DRUG_QTY"][0];
+      var td6=dom.newEl("td");
+      td6.innerHTML="<input type='text' id="+resp["ID"][0]+" class='input-small' style='padding : 5px' onchange='updateCost();showCustomerChange()'>";
+      var td7=dom.newEl("td");
+      td7.innerHTML=new Date(resp["DRUG_EXPIRY_LIMIT"][0]).toDateString();
+      tr.add(td1);
+      tr.add(td2);
+      tr.add(td3);
+      tr.add(td4);
+      tr.add(td5);
+      tr.add(td7);
+      tr.add(td6);
+      table.add(tr);
+      dom.el("sale_area").add(table);
+      var cost=calculateCost();
+      dom.el("cost_area").innerHTML="Amount Due : "+formatMoney(cost); 
+   }
+   
+   function updateCost(){
+     var cost=calculateCost();
+     dom.el("cost_area").innerHTML="Amount Due : "+formatMoney(cost);   
+   }
+  
+   function calculateCost(){
+     var table=dom.el("sale_area_table");
+     var totalCost=0;
+     for(var x=1; x<table.children.length; x++){
+        var sPrice=table.children[x].children[3].innerHTML;
+        var qty=table.children[x].children[6].firstChild.value;
+        if(!qty || qty.trim()==="" || isNaN(qty)){
+          qty=0;  
+        }
+        var cost=parseFloat(sPrice)*parseInt(qty);
+        totalCost=totalCost+cost;
+     }
+     return totalCost;
+   }
+   
+   function undoPreviousTransaction(){
+     var conf=confirm("Undo Previous transaction ?");
+     if(!conf){
+        return; 
+     }
+     if(!previousDrugIds){
+       return;  
+     }
+     var json={
+               request_header : {
+                     request_msg : "undo_previous_transaction",
+                     role : "pharmacist"
+                  },
+                  request_object : { 
+                    drug_ids : previousDrugIds,
+                    qtys : previousQty
+                  }
+              };
+              
+               Ajax.run({
+                  url : serverUrl,
+                  type : "post",
+                  data : json,
+                  error : function(err){
+                     showInfo("user_info","An error occurred when attempting to undo the previous transaction");
+                  },
+                  success : function(json){ 
+                     if(json.response.data==="success"){
+                        showInfo("sale_info","Transaction was reversed successfully");
+                        previousDrugIds=null;
+                        previousQty=null;
+                     }
+                  } 
+            }); 
+   }
+   
+   function commitTransaction(){
+     var conf=confirm("Commit transaction ?");
+     if(!conf){
+        return; 
+     }
+     var table=dom.el("sale_area_table");
+     if(!table){
+         return;
+     }
+     var drugIds=[];
+     var qtys=[];
+     for(var x=1; x<table.children.length; x++){
+        var availStock=table.children[x].children[4].innerHTML;
+        var input=table.children[x].children[6].firstChild;
+        var qty=input.value;
+        if(qty==="" || !qty || isNaN(qty)){
+          showInfo("sale_info","No quantity specified for this item"); 
+          input.focus(); 
+        }
+        var drugId=input.getAttribute("id");
+        drugIds.push(drugId);
+        qtys.push(qty);
+        if(parseInt(qty)>parseInt(availStock)){
+          //not enough stock to proceed 
+          showInfo("sale_info","There is not sufficient stock to proceed with the sale"); 
+          input.focus();
+          return;
+        }
+     }
+     if(drugIds.length===0){
+        return; //nothing to sell
+     }
+     var json={
+               request_header : {
+                     request_msg : "commit_transaction",
+                     role : "pharmacist"
+                  },
+                  request_object : { 
+                    drug_ids : drugIds,
+                    qtys : qtys
+                  }
+              };
+              
+               Ajax.run({
+                  url : serverUrl,
+                  type : "post",
+                  data : json,
+                  error : function(err){
+                     showInfo("user_info","An error occurred when attempting to commit transaction");
+                  },
+                  success : function(json){ 
+                     if(json.response.data==="success"){
+                        showInfo("sale_info","Transaction completed successfully");
+                        previousDrugIds=drugIds;
+                        previousQty=qtys;
+                        clearSale();
+                     }
+                  } 
+            }); 
+     }
+   
+   function clearSale(){
+     var table = dom.el("sale_area_table");
+     if(table){
+       dom.el("sale_area_table").remove();
+       dom.el("cost_area").innerHTML="";
+       dom.el("amount_issued").value="";
+       dom.el("customer_change").innerHTML="";
+     }
+   }
+   
+   function showCustomerChange(){
+      var cost=calculateCost();
+      var amountIssued=dom.el("amount_issued").value;
+      if(!amountIssued || amountIssued.trim()==="" || isNaN(amountIssued)){
+          amountIssued=0;  
+        }
+      var change=parseFloat(amountIssued)-cost;
+      if(change<0){
+         showInfo("sale_info","The customer has issued an insufficient amount!"); 
+      }
+      dom.el("customer_change").innerHTML="Customer Change : "+formatMoney(change);
+   }
+        
+        function formatMoney(num) {
+            num=parseFloat(num);
+            var p = num.toFixed(2).split(".");
+            var chars = p[0].split("").reverse();
+            var newstr = '';
+            var count = 0;
+            for (x in chars) {
+                count++;
+                if(count%3 === 1 && count !== 1) {
+                    newstr = chars[x] + ',' + newstr;
+                } else {
+                    newstr = chars[x] + newstr;
+                }
+            }
+            return newstr + "." + p[1];
+        }
+        
+   function getDate(today){
+      var date=new Date();
+      var month=date.getMonth()+1;
+      var day=date.getUTCDate();
+      if(month<10){
+         month="0"+month;
+      }
+      if(day<10){
+         day="0"+day;
+      }
+      if(today){
+        return date.getFullYear()+"-"+month +"-"+day;   
+      }
+      else{
+         return date.getFullYear()+"-"+month +"-"+(day+1);
+      }
+      
+   }
+        
+        
+   function openStockHistory(){
+      var begin=getDate(true);
+      var end=getDate(false);
+      var id="none"; 
+      var json={
+                 request_header : {
+                     request_msg : "stock_history",
+                     role : "pharmacist"
+                  },
+                  request_object : {  
+                    begin_date : begin,
+                    end_date : end,
+                    drug_id : id
+                  }
+              };
+              
+               Ajax.run({
+                  url : serverUrl,
+                  type : "post",
+                  data : json,
+                  loadArea : "sale_load",
+                  error : function(err){
+                     showInfo("stock_info","An error occurred when attempting to fetch stock history");
+                  },
+                  success : function(json){
+                    var name = Math.floor(Math.random()*1000000);
+                    var win=window.open("template.html",name,"width=800,height=650,scrollbars=yes,resizable=yes");
+                    var header=win.document.createElement("h3");
+                    header.setAttribute("align","center");
+                    header.innerHTML=bussinessName;
+                    var func=function(){
+                    var table=win.document.createElement("table");
+                    table.setAttribute("class","table table-condensed");
+                    var th=win.document.createElement("th");
+                    var th1=win.document.createElement("th");
+                    var th2=win.document.createElement("th");
+                    var th3=win.document.createElement("th");
+                    var th4=win.document.createElement("th");
+                    
+                    th.innerHTML="Drug Name";
+                    th1.innerHTML="Amount Received";
+                    th2.innerHTML="Drug Quantity";
+                    th3.innerHTML="Entry Type";
+                    th4.innerHTML="Entry Time";
+                    table.appendChild(th);
+                    table.appendChild(th1);
+                    table.appendChild(th2);
+                    table.appendChild(th3);
+                    table.appendChild(th4);
+                   
+                    var totalStock=0;
+                    var totalCostSp=0;
+                    for(var x=0; x<json.response.data["DRUG_NAME"].length; x++){
+                        var costSp=json.response.data["STOCK_COST_SP"][x];
+                        var qty=json.response.data["STOCK_QTY"][x];
+                        var narr=json.response.data["NARRATION"][x];
+                        var tr=win.document.createElement("tr");
+                        var td=win.document.createElement("td"); 
+                        var td1=win.document.createElement("td"); 
+                        var td2=win.document.createElement("td");
+                        var td3=win.document.createElement("td"); 
+                        var td4=win.document.createElement("td"); 
+                       if(json.response.data["TRAN_TYPE"][x]==="1"){
+                          if(narr==="Reversal of sale"){
+                            td3.innerHTML="<font color='green'>Stock Increase</font>";  
+                            td2.innerHTML=qty;
+                            td1.innerHTML=formatMoney(costSp);
+                            td.innerHTML=json.response.data["DRUG_NAME"][x];
+                            td4.innerHTML=new Date(json.response.data["CREATED"][x]).toLocaleTimeString();
+                            totalStock=totalStock-parseInt(qty);
+                            totalCostSp=totalCostSp-parseFloat(costSp);
+                            tr.appendChild(td);
+                            tr.appendChild(td1);
+                            tr.appendChild(td2);
+                            tr.appendChild(td3);
+                            tr.appendChild(td4);
+                            table.appendChild(tr);
+                            
+                          }
+                       }
+                       else{
+                            td3.innerHTML="<font color='red'>Stock Reduction</font>";  
+                            td2.innerHTML=qty;
+                            td1.innerHTML=formatMoney(costSp);
+                            td.innerHTML=json.response.data["DRUG_NAME"][x];
+                            td4.innerHTML=new Date(json.response.data["CREATED"][x]).toLocaleTimeString();
+                            totalStock=totalStock+parseInt(qty);
+                            totalCostSp=totalCostSp+parseFloat(costSp);
+                            tr.appendChild(td);
+                            tr.appendChild(td1);
+                            tr.appendChild(td2);
+                            tr.appendChild(td3);
+                            tr.appendChild(td4);
+                            table.appendChild(tr);
+                       }
+                    }
+                    
+                     var tr=win.document.createElement("tr");
+                     var td1=win.document.createElement("td");
+                     var td2=win.document.createElement("td");
+                     var td3=win.document.createElement("td");
+                    
+                     td1.innerHTML="<b>Totals</b>";
+                     td2.innerHTML=formatMoney(totalCostSp);
+                     td3.innerHTML=totalStock;
+                     
+                     tr.appendChild(td1);
+                     tr.appendChild(td2);
+                     tr.appendChild(td3);
+                     table.appendChild(tr);
+                     win.document.getElementsByTagName("body")[0].appendChild(header);
+                     win.document.getElementsByTagName("body")[0].appendChild(table); 
+                     win.document.title="Today's sales";
+                   };
+                   setTimeout(func,1000);
+                } 
+          });    
+    }   
+    
+    function fetchDrugReminder(){
+      var json={
+                 request_header : {
+                     request_msg : "drug_reminder",
+                     role : "pharmacist"
+                  },
+                  request_object : {  
+                    
+                  }
+              };
+              
+               Ajax.run({
+                  url : serverUrl,
+                  type : "post",
+                  data : json,
+                  error : function(err){
+                     showInfo("sale_info","An error occurred when attempting to fetch drug reminders");
+                  },
+                  success : function(json){
+                    var resp=json.response.data;
+                    ui.table("remind_area",["Drug Name","Drug Quantity"],[resp["DRUG_NAME"], resp["DRUG_QTY"]],true);
+                } 
+          });
+    }
+    
+    function closeDrugReminder(){
+      dom.el("remind_area").remove();
+    }
+   
+   
+   
+        </script>
+    </head>
+    <body>
+      <div class="container">
+          <table width="940" class="sub-container">
+              <tr>
+                  <td>
+                     <label id="log_name" style="padding-left: 10px"></label>
+                  </td>
+                  <td align="right">
+                    <a href="javascript:doLogOut()" style="padding-right: 20px">Log Out</a>
+                </td>
+               </tr>
+          </table>
+          <div class="sub-container">
+              <h3>Sale</h3>
+              <ul style="margin-left: 0px">
+                  <li style="list-style-type : none" class="dropdown" id="auto_suggest_container">
+                    <input type="text" id="search_param" data-toggle="dropdown" placeholder="Search Drugs" class="dropdown-toggle input-xxlarge" search_type="drugs" onkeyup="javascript:autoSuggest('search_param','auto_suggest','DRUG_NAME')">  
+                    <button type="button" class="btn btn-primary" onclick="allDrugs()" style="margin-bottom : 10px">All Drugs</button>
+                  </li>
+                  <li class="dropdown-menu" id="auto_suggest" style="display : none">
+                      
+                  </li>
+              </ul>
+              <hr>
+              <div id="sale_area">
+                  
+              </div>
+              <label id="cost_area" style="font-size : 20px"></label>
+              <br/>
+              <input type="text" id="amount_issued" class="input-small" onchange="showCustomerChange()" placeholder="Amount Issued">
+              <br/>
+              <label id="customer_change" style="font-size : 20px" ></label>
+              <br/>
+              <label id="sale_load" style="display: none;"><img src="files/loader.gif"/></label>
+              <label id="sale_info" style="color : red"></label>
+
+                <div style="clear: both"></div>
+                <footer>
+                     <button type="button" class="btn btn-primary" onclick="commitTransaction()">Commit Transaction</button>
+                     <button type="button" class="btn btn-primary" onclick="undoPreviousTransaction()">Undo Previous Transaction</button>
+                     <button type="button" class="btn btn-primary" onclick="clearSale()">Clear Sale</button>
+                     <button type="button" class="btn btn-primary" onclick="openStockHistory()">Todays Sales</button>
+                </footer>
+          </div>
+               <div id="remind_area" class="sub-container" >
+                 <button type="button" class="close"  onclick="closeDrugReminder()">&times;</button>
+                <h3>Stock Running Low</h3>
+            </div>
+            <div id="expiry_area" class="sub-container" >
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true" onclick="closeExpiryReminder()">&times;</button>
+                <h3>Stock Expiry</h3>
+            </div>
+      </div>
+        
+    </body>
+</html>
